@@ -9,3 +9,12 @@
 
 # Undo-tree save-files
 *.~undo-tree
+
+# User
+
+/elisp/elpa/*
+!/elisp/elpa/.keep
+auto-save-list/
+eshell/
+ac-comphist.dat
+network-security.data
