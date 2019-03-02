@@ -34,10 +34,20 @@
 ;; scratchの初期メッセージ消去
 (setq initial-scratch-message "")
 
-;; alpha
-(if window-system 
-    (progn
-      (set-frame-parameter nil 'alpha 95)))
+;; リージョンのハイライト
+(transient-mark-mode 1)
+
+;; タイトルにフルパス表示
+(setq frame-title-format "%f")
+
+;;current directory 表示
+(let ((ls (member 'mode-line-buffer-identification
+                  mode-line-format)))
+  (setcdr ls
+          (cons '(:eval (concat " ("
+                                (abbreviate-file-name default-directory)
+                                ")"))
+                (cdr ls))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 操作に関する設定
@@ -60,7 +70,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (set-default-coding-systems 'utf-8) ; utf-8 にする
+(set-language-environment 'utf-8)
 (prefer-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-default 'buffer-file-coding-system 'utf-8)
+(set-buffer-file-coding-system 'utf-8)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; フォントに関する設定
@@ -68,6 +84,7 @@
 
 (prefer-coding-system 'utf-8)
 (set-frame-font "Ricty Diminished-12")
+(add-to-list 'default-frame-alist '(font . "Ricty Diminished-12"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; テキスト編集に関する設定
@@ -109,7 +126,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (markdown-mode rjsx-mode web-mode php-mode flycheck-pos-tip flycheck exec-path-from-shell quelpa-use-package diminish use-package rainbow-delimiters powerline paredit lispxmp atom-one-dark-theme ac-slime))))
+    (tabbar neotree elscreen recentf-remove-sudo-tramp-prefix recentf-ext monokai-theme markdown-mode rjsx-mode web-mode php-mode flycheck-pos-tip flycheck exec-path-from-shell quelpa-use-package diminish use-package rainbow-delimiters powerline paredit lispxmp atom-one-dark-theme ac-slime))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -159,7 +176,15 @@
 ;; テーマ
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(load-theme 'atom-one-dark t)
+(load-theme 'monokai t)
+;; (load-theme 'atom-one-dark t)
+;; (load-theme 'deeper-blue t)
+;; (load-theme 'manoj-dark t)
+;; (load-theme 'misterioso t)
+;; (load-theme 'tango-dark t)
+;; (load-theme 'tsdh-dark t)
+;; (load-theme 'wheatgrass t)
+;; (load-theme 'wombat t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; モードライン
@@ -167,6 +192,129 @@
 
 (require 'powerline)
 (powerline-default-theme)
+
+(require 'elscreen)
+(elscreen-start)
+(global-set-key (kbd "s-t") 'elscreen-create)
+(global-set-key "\C-l" 'elscreen-next)
+(global-set-key "\C-r" 'elscreen-previous)
+(global-set-key (kbd "s-d") 'elscreen-kill)
+(set-face-attribute 'elscreen-tab-background-face nil
+                    :background "grey10"
+                    :foreground "grey90")
+(set-face-attribute 'elscreen-tab-control-face nil
+                    :background "grey20"
+                    :foreground "grey90")
+(set-face-attribute 'elscreen-tab-current-screen-face nil
+                    :background "grey20"
+                    :foreground "grey90")
+(set-face-attribute 'elscreen-tab-other-screen-face nil
+                    :background "grey30"
+                    :foreground "grey60")
+;;; [X]を表示しない
+(setq elscreen-tab-display-kill-screen nil)
+;;; [<->]を表示しない
+(setq elscreen-tab-display-control nil)
+;;; タブに表示させる内容を決定
+(setq elscreen-buffer-to-nickname-alist
+      '(("^dired-mode$" .
+         (lambda ()
+           (format "Dired(%s)" dired-directory)))
+        ("^Info-mode$" .
+         (lambda ()
+           (format "Info(%s)" (file-name-nondirectory Info-current-file))))
+        ("^mew-draft-mode$" .
+         (lambda ()
+           (format "Mew(%s)" (buffer-name (current-buffer)))))
+        ("^mew-" . "Mew")
+        ("^irchat-" . "IRChat")
+        ("^liece-" . "Liece")
+        ("^lookup-" . "Lookup")))
+(setq elscreen-mode-to-nickname-alist
+      '(("[Ss]hell" . "shell")
+        ("compilation" . "compile")
+        ("-telnet" . "telnet")
+        ("dict" . "OnlineDict")
+        ("*WL:Message*" . "Wanderlust")))
+
+;; neotree（サイドバー）
+(require 'neotree)
+(global-set-key "\C-o" 'neotree-toggle)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 検索性の向上
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; 大文字・小文字を区別しない
+(setq case-fold-search t)
+
+;; ファイル名検索
+(define-key global-map [(super i)] 'find-name-dired)
+
+;; ファイル内検索（いらないメッセージは消去）
+(define-key global-map [(super f)] 'rgrep)
+
+;; rgrepのheader messageを消去
+(defun delete-grep-header ()
+  (save-excursion
+    (with-current-buffer grep-last-buffer
+      (goto-line 5)
+      (narrow-to-region (point) (point-max)))))
+
+(defadvice grep (after delete-grep-header activate) (delete-grep-header))
+(defadvice rgrep (after delete-grep-header activate) (delete-grep-header))
+
+;; rgrep時などに，新規にwindowを立ち上げる
+(setq special-display-buffer-names '("*Help*" "*compilation*" "*interpretation*" "*grep*" ))
+
+;; "grepバッファに切り替える"
+(defun my-switch-grep-buffer()
+  (interactive)
+    (if (get-buffer "*grep*")
+            (pop-to-buffer "*grep*")
+      (message "No grep buffer")))
+(global-set-key (kbd "s-e") 'my-switch-grep-buffer)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ショートカットコマンド
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; 履歴参照
+(defmacro with-suppressed-message (&rest body)
+  "Suppress new messages temporarily in the echo area and the `*Messages*' buffer while BODY is evaluated."
+  (declare (indent 0))
+  (let ((message-log-max nil))
+    `(with-temp-message (or (current-message) "") ,@body)))
+(require 'recentf)
+(setq recentf-save-file "~/.emacs.d/.recentf")
+(setq recentf-max-saved-items 1000)            ;; recentf に保存するファイルの数
+(setq recentf-exclude '(".recentf"))           ;; .recentf自体は含まない
+(setq recentf-auto-cleanup 'never)             ;; 保存する内容を整理
+(run-with-idle-timer 30 t '(lambda ()          ;; 30秒ごとに .recentf を保存
+                             (with-suppressed-message (recentf-save-list))))
+(require 'recentf-ext)
+(define-key global-map [(super r)] 'recentf-open-files)
+
+;; コメントアウト
+;; 選択範囲
+(global-set-key (kbd "s-;") 'comment-region)
+
+;; コメントアウト
+;; 一行
+(defun one-line-comment ()
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (set-mark (point))
+    (end-of-line)
+    (comment-or-uncomment-region (region-beginning) (region-end))))
+(global-set-key (kbd "s-/") 'one-line-comment)
+
+;; 直前のバッファに戻る
+(global-set-key (kbd "s-[") 'switch-to-prev-buffer)
+
+;; 次のバッファに進む
+(global-set-key (kbd "s-]") 'switch-to-next-buffer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Git関連設定
@@ -280,6 +428,11 @@
 ;; SLIME
 (require 'slime)
 (slime-setup '(slime-repl slime-fancy slime-banner))
+(setq slime-net-coding-system 'utf-8-unix)
+(setq slime-startup-animation nil)
+
+;; カーソル付近にある単語の情報を表示
+(slime-autodoc-mode)
 
 ;; 日本語利用のための設定（Lisp 環境側の対応も必要）
 (setq slime-net-coding-system 'utf-8-unix)
@@ -287,6 +440,15 @@
 (require 'ac-slime)
 (add-hook 'slime-mode-hook 'set-up-slime-ac)
 (add-hook 'slime-repl-mode-hook 'set-up-slime-ac)
+
+;;; Qlot
+(defun slime-qlot-exec (directory)
+  (interactive (list (read-directory-name "Project directory: ")))
+  (slime-start :program "qlot"
+               :program-args '("exec" "ros" "-S" "." "run")
+               :directory directory
+               :name 'qlot
+               :env (list (concat "PATH=" (mapconcat 'identity exec-path ":")))))
 
 ;; Clojure
 ;; ================================================================
@@ -401,4 +563,11 @@
 ;; Markdown
 ;; ================================================================
 
-(require 'markdown-mode)
+(autoload 'markdown-mode "markdown-mode"
+   "Major mode for editing Markdown files" t)
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+
+(autoload 'gfm-mode "markdown-mode"
+   "Major mode for editing GitHub Flavored Markdown files" t)
+(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
