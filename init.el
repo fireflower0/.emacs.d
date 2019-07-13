@@ -1,14 +1,26 @@
-;; パッケージ
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; パッケージ
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (require 'package)
 
 ;; http://stackoverflow.com/a/26110978
 (setq package-check-signature nil)
 
+;; MELPAを追加
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+;; MELPA-stableを追加
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
+;; Marmaladeを追加
+(add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/") t)
+
+;; Orgを追加
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+
+;; 初期化
 (package-initialize)
-(setq package-archives
-      '(("gnu" . "http://elpa.gnu.org/packages/")
-        ("melpa" . "http://melpa.org/packages/")
-        ("org" . "http://orgmode.org/elpa/")))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -18,18 +30,40 @@
  '(flycheck-disabled-checkers (quote (javascript-jshint javascript-jscs)))
  '(package-selected-packages
    (quote
-    (nodejs-repl add-node-modules-path scss-mode flycheck ensime scala-mode markdown-mode web-mode git-gutter magit neotree powerline paredit rainbow-delimiters tabbar elscreen rjsx-mode ac-slime slime mozc))))
-
+    (flycheck-rust racer rust-mode dracula-theme doom-themes helm color-theme-sanityinc-tomorrow zenburn-theme spacemacs-theme solarized-theme git-gutter magit js-auto-format-mode add-node-modules-path nodejs-repl web-mode markdown-mode paredit ac-slime slime scss-mode rjsx-mode flycheck neotree powerline rainbow-delimiters monokai-theme company smartparens mozc))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(hl-line ((t (:background "color-236")))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 日本語に関する設定
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(set-language-environment 'Japanese)
+(set-language-environment 'utf-8)
+(prefer-coding-system 'utf-8)
+
+;;; mozc
+(require 'mozc)
+(setq default-input-method "japanese-mozc")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 一般設定
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Theme
+;; (load-theme 'monokai t)
+;; (load-theme 'solarized-dark t)
+(load-theme 'spacemacs-dark t)
+;; (load-theme 'zenburn t)
+;; (load-theme 'sanityinc-tomorrow-bright t)
+;; (load-theme 'dracula t)
+
+;;; フォント
+(set-fontset-font t 'japanese-jisx0208 "Ricty Diminished")
 
 ;; 起動時のメッセージを省略する
 (setq inhibit-startup-message t)
@@ -43,15 +77,17 @@
 ;; スクロールバーは非表示
 (scroll-bar-mode 0)
 
-;; カーソルの点滅オフ
-(blink-cursor-mode 0)
+;; タイトルにフルパス表示
+(setq frame-title-format "%f")
 
-;; カーソルを強調表示する
-;; (global-hl-line-mode 1)
-
-;; 対応する括弧を強調表示する
-(show-paren-mode 1)
-(setq show-paren-style 'mixed)
+;;current directory 表示
+(let ((ls (member 'mode-line-buffer-identification
+                  mode-line-format)))
+  (setcdr ls
+          (cons '(:eval (concat " ("
+                                (abbreviate-file-name default-directory)
+                                ")"))
+                (cdr ls))))
 
 ;; アラートのベルを消す
 (setq ring-bell-function 'ignore)
@@ -65,52 +101,40 @@
 ;;; .#* とかのバックアップファイルを作らない
 (setq auto-save-default nil)
 
-;; 文字コードに関する設定 
-(set-default-coding-systems 'utf-8)
-(prefer-coding-system 'utf-8)
-(setq coding-system-for-read 'utf-8)
-(setq coding-system-for-write 'utf-8)
-
-;; フォントに関する設定
-(set-frame-font "Ricty Diminished-12")
-(add-to-list 'default-frame-alist '(font . "Ricty Diminished-12"))
-
-;; テーマ
-(load-theme 'tango-dark t)
-
-;; 行番号を表示する
-(global-linum-mode 1)
-
-;; タイトルにフルパス表示
-(setq frame-title-format "%f")
-
-;;current directory 表示
-(let ((ls (member 'mode-line-buffer-identification
-                  mode-line-format)))
-  (setcdr ls
-          (cons '(:eval (concat " ("
-                                (abbreviate-file-name default-directory)
-                                ")"))
-                (cdr ls))))
-
-;; TABの表示幅。初期値は8
-(setq-default tab-width 4)
-
-;; インデントにタブ文字を使用しない
-(setq-default indent-tabs-mode nil)
+;; Buffer操作 (icomplete-mode)
+(icomplete-mode 1)
 
 ;; 反対側のウィンドウにいけるように
 (setq windmove-wrap-around t)
 (windmove-default-keybindings)
 
-;; Buffer操作 (icomplete-mode)
-(icomplete-mode 1)
+;; インデントにタブ文字を使用しない
+(setq-default indent-tabs-mode nil)
 
-;; 日本語に関する設定
-(require 'mozc)
-(set-language-environment "Japanese")
-(setq default-input-method "japanese-mozc")
-(set-fontset-font t 'unicode "Ricty Diminished" nil 'prepend)
+;; TABの表示幅。初期値は8
+(setq-default tab-width 4)
+
+;;; ハイライト
+(global-hl-line-mode t)                     ; 現在行をハイライト
+
+(show-paren-mode t)                         ; 対応する括弧をハイライト
+(setq show-paren-style 'mixed)              ; 括弧のハイライトの設定 (parenthesis/expression/mixed)
+(transient-mark-mode t)                     ; 選択範囲をハイライト
+
+;;; line number
+(global-linum-mode t)
+(setq linum-format "%4d ")
+
+;;; 改行時インデント
+(electric-indent-mode t)
+
+;;; スクロール1行ずつ
+(setq scroll-step 1)
+
+;;; 括弧自動補完
+;; (require 'smartparens)
+;; (smartparens-global-mode t)
+;; (setq-default sp-highlight-pair-overlay nil)    ;ハイライト機能削除
 
 ;; 括弧に色をつける
 (require 'rainbow-delimiters)
@@ -183,29 +207,83 @@
 (global-auto-revert-mode 1)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Auto Complete
+;;; Helm
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'auto-complete-config)
-(ac-config-default)
-(add-to-list 'ac-modes 'text-mode) ;; text-modeでも自動的に有効にする
-(add-to-list 'ac-modes 'fundamental-mode) ;; fundamental-mode
-(add-to-list 'ac-modes 'org-mode)
-(add-to-list 'ac-modes 'yatex-mode)
-(ac-set-trigger-key "TAB")
-(setq ac-use-menu-map t) ;; 補完メニュー表示時にC-n/C-pで補完候補選択
-(setq ac-use-fuzzy t)    ;; 曖昧マッチ
 
-;;; FlyCheck
+(require 'helm)
+(require 'helm-config)
+
+;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+(global-set-key (kbd "C-c h") 'helm-command-prefix)
+(global-unset-key (kbd "C-x c"))
+
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+(when (executable-find "curl")
+  (setq helm-google-suggest-use-curl-p t))
+
+(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+      helm-ff-file-name-history-use-recentf t
+      helm-echo-input-in-header-line t)
+
+(defun spacemacs//helm-hide-minibuffer-maybe ()
+  "Hide minibuffer in Helm session if we use the header line as input field."
+  (when (with-helm-buffer helm-echo-input-in-header-line)
+    (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
+      (overlay-put ov 'window (selected-window))
+      (overlay-put ov 'face
+                   (let ((bg-color (face-background 'default nil)))
+                     `(:background ,bg-color :foreground ,bg-color)))
+      (setq-local cursor-type nil))))
+
+
+(add-hook 'helm-minibuffer-set-up-hook
+          'spacemacs//helm-hide-minibuffer-maybe)
+
+(setq helm-autoresize-max-height 0)
+(setq helm-autoresize-min-height 20)
+(helm-autoresize-mode 1)
+
+(helm-mode 1)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; オートコンプリート
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'company)
+(global-company-mode) ; 全バッファで有効にする
+(setq company-idle-delay 0) ; デフォルト0.5
+(setq company-minimum-prefix-length 2) ; デフォルト4
+(setq company-selection-wrap-around t) ; 候補の一番下でさらに下に行こうとすると一番上に戻る
+(define-key company-active-map (kbd "M-n") nil)
+(define-key company-active-map (kbd "M-p") nil)
+(define-key company-active-map (kbd "C-n") 'company-select-next)
+(define-key company-active-map (kbd "C-p") 'company-select-previous)
+(define-key company-active-map (kbd "C-h") nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Flycheck
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (require 'flycheck)
+(add-hook 'after-init-hook #'global-flycheck-mode)
 
+;; jshint、jscsを無効に
 (eval-after-load 'flycheck
   '(custom-set-variables
-    ;; 他の文法チェッカーが入ってると優先されるので除外
     '(flycheck-disabled-checkers '(javascript-jshint javascript-jscs))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (load (expand-file-name "~/.roswell/helper.el"))
 
 ;; SLIME
@@ -301,12 +379,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; RJSX Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (require 'rjsx-mode)
-(add-to-list 'auto-mode-alist '(".*\\.js\\'" . rjsx-mode))
+
+(add-to-list 'auto-mode-alist '(".*\\.jsx\\'" . rjsx-mode))
+(flycheck-add-mode 'javascript-eslint 'rjsx-mode)
+
 (add-hook 'rjsx-mode-hook
           (lambda ()
-            (setq indent-tabs-mode nil) ;;インデントはタブではなくスペース
-            (setq js-indent-level 2) ;;スペースは２つ、デフォルトは4
+            (flycheck-mode)
+            (add-node-modules-path)
+            (setq indent-tabs-mode nil)                  ;;インデントはタブではなくスペース
+            (setq js-indent-level 2)                     ;;スペースは２つ、デフォルトは4
             (setq js2-strict-missing-semi-warning nil))) ;;行末のセミコロンの警告はオフ
 
 (require 'scss-mode)
@@ -315,8 +399,56 @@
             (setq css-indent-offset 2)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; JS2 Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; (require 'js2-mode)
+;; (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+
+;; (setq js2-include-browser-externs nil)
+;; (setq js2-mode-show-parse-errors nil)
+;; (setq js2-mode-show-strict-warnings nil)
+;; (setq js2-highlight-external-variables nil)
+;; (setq js2-include-jslint-globals nil)
+
+;; (add-hook 'js2-mode-hook
+;;           (lambda ()
+;;             (flycheck-mode)
+;;             (add-node-modules-path)
+;;             (setq js2-basic-offset 2)
+;;             (define-key js2-mode-map (kbd "C-x C-e") 'nodejs-repl-send-last-expression)
+;;             (define-key js2-mode-map (kbd "C-c C-j") 'nodejs-repl-send-line)
+;;             (define-key js2-mode-map (kbd "C-c C-r") 'nodejs-repl-send-region)
+;;             (define-key js2-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
+;;             (define-key js2-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl)))
+
+;;; for JSX
+;; 参考: http://cortyuming.hateblo.jp/entry/2015/11/05/174929
+
+;; (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js2-jsx-mode))
+;; (flycheck-add-mode 'javascript-eslint 'js2-jsx-mode)
+
+;; (add-hook 'js2-jsx-mode-hook
+;;           (lambda ()
+;;             (flycheck-mode)
+;;             (add-node-modules-path)
+;;             (setq js2-basic-offset 2)
+;;             (define-key js2-mode-map (kbd "C-c C-o") 'uncomment-region)))
+
+;;; for SCSS
+
+;; (add-hook 'scss-mode-hook
+;;           (lambda ()
+;;             (setq css-indent-offset 2)))
+
+;;; プロジェクトローカルのeslintを使いたい
+;; https://qiita.com/ybiquitous/items/4387bba133180bcfdb69
+;; M-x package-install add-node-modules-path
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Markdown Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (require 'markdown-mode)
 (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
@@ -325,7 +457,31 @@
 (set-face-attribute 'markdown-code-face nil :inherit 'default)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Scala Mode
+;;; Rust Mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'scala-mode)
-(require 'ensime)
+
+;;; racerやrustfmt、コンパイラにパスを通す
+(add-to-list 'exec-path (expand-file-name "~/.cargo/bin/"))
+
+;;; rust-modeでrust-format-on-saveをtにすると自動でrustfmtが走る
+(eval-after-load "rust-mode"
+  '(setq-default rust-format-on-save t))
+
+;;; rustのファイルを編集するときにracerとflycheckを起動する
+(add-hook 'rust-mode-hook (lambda ()
+                            (racer-mode)
+                            (flycheck-rust-setup)))
+
+;;; racerのeldocサポートを使う
+(add-hook 'racer-mode-hook #'eldoc-mode)
+
+;;; racerの補完サポートを使う
+(add-hook 'racer-mode-hook (lambda ()
+                             (company-mode)
+                             ;;; この辺の設定はお好みで
+                             (set (make-variable-buffer-local 'company-idle-delay) 0.1)
+                             (set (make-variable-buffer-local 'company-minimum-prefix-length) 0)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
